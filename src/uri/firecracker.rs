@@ -1,5 +1,7 @@
 use std::{
+    ffi::OsString,
     io::Result as IoResult,
+    os::unix::ffi::OsStringExt as _,
     path::{Path, PathBuf},
 };
 
@@ -27,8 +29,9 @@ impl FirecrackerUri for Uri {
         guest_port: u32,
         url: impl AsRef<str>,
     ) -> Result<Uri, InvalidUri> {
-        let host = host_socket_path.as_ref().to_string_lossy().to_string();
-        let authority = encode(format!("{host}:{guest_port}"));
+        let host = encode(host_socket_path.as_ref().as_os_str().as_encoded_bytes());
+        let guest_port = encode(guest_port.to_string());
+        let authority = format!("{host}{:02x}{guest_port}", b':');
         let path_and_query = url.as_ref().trim_start_matches('/');
         let uri_str = format!("fc://{authority}/{path_and_query}");
         uri_str.parse()
@@ -36,17 +39,23 @@ impl FirecrackerUri for Uri {
 
     fn parse_firecracker(&self) -> IoResult<(PathBuf, u32)> {
         if self.scheme_str() == Some("fc") {
-            let host = self.host().ok_or_else(|| io_input_err("URI host must be present"))?;
-            let hex_decoded = Vec::from_hex(host).map_err(|_| io_input_err("URI host must be hex"))?;
-            let full_str = String::from_utf8_lossy(&hex_decoded).into_owned();
-            let splits = full_str
-                .split_once(':')
-                .ok_or_else(|| io_input_err("URI host could not be split in halves with a ."))?;
-            let host_socket_path = PathBuf::from(splits.0);
-            let guest_port = splits
+            let host_hex = self.host().ok_or_else(|| io_input_err("URI host must be present"))?;
+            let mut host_octets =
+                Vec::from_hex(host_hex).map_err(|_| io_input_err("URI host must be hexadecimal encoded"))?;
+
+            let colon_pos = host_octets
+                .iter()
+                .rposition(|octet| *octet == b':')
+                .ok_or_else(|| io_input_err("URI host does not encode port"))?;
+
+            let guest_port = String::from_utf8(host_octets.split_off(colon_pos))
+                .map_err(|_| io_input_err("URI guest port is not valid UTF8"))?
+                .split_at(1)
                 .1
                 .parse::<u32>()
-                .map_err(|_| io_input_err("URI guest port could not converted to u32"))?;
+                .map_err(|_| io_input_err("URI guest port could not be parsed"))?;
+
+            let host_socket_path = OsString::from_vec(host_octets).into();
 
             Ok((host_socket_path, guest_port))
         } else {

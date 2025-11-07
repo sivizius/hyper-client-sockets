@@ -2,7 +2,7 @@ use std::{future::Future, sync::Arc};
 
 use async_executor::Executor;
 use bytes::Bytes;
-use common::{check_response, serve_firecracker, serve_unix, serve_vsock};
+use common::{check_response, serve_firecracker, serve_unix, serve_unix_abstract, serve_vsock};
 use http::{Request, Uri};
 use http_body_util::Full;
 use hyper::client::conn::http1::handshake;
@@ -18,9 +18,24 @@ use smol_hyper::rt::SmolExecutor;
 mod common;
 
 #[test]
-fn async_io_unix_raw_connectivity() {
+fn async_io_unix_raw_connectivity_with_pathname() {
     run(|executor| async move {
         let socket_path = serve_unix();
+        let io = AsyncIoBackend::connect_to_unix_socket(&socket_path).await.unwrap();
+        let (mut send_request, conn) = handshake::<_, Full<Bytes>>(io).await.unwrap();
+        executor.spawn(conn).detach();
+        let response = send_request
+            .send_request(Request::new(Full::new(Bytes::new())))
+            .await
+            .unwrap();
+        check_response(response).await;
+    });
+}
+
+#[test]
+fn async_io_unix_raw_connectivity_with_abstract_name() {
+    run(|executor| async move {
+        let socket_path = serve_unix_abstract();
         let io = AsyncIoBackend::connect_to_unix_socket(&socket_path).await.unwrap();
         let (mut send_request, conn) = handshake::<_, Full<Bytes>>(io).await.unwrap();
         executor.spawn(conn).detach();

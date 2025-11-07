@@ -38,6 +38,29 @@ pub fn serve_unix() -> PathBuf {
 }
 
 #[allow(unused)]
+pub fn serve_unix_abstract() -> PathBuf {
+    let socket_path = PathBuf::from("\0test").with_extension(Uuid::new_v4().to_string());
+
+    let cloned_socket_path = socket_path.clone();
+    in_tokio_thread(async move {
+        let listener = UnixListener::bind(cloned_socket_path).unwrap();
+
+        loop {
+            let (stream, _) = listener.accept().await.unwrap();
+            tokio::spawn(async move {
+                http1::Builder::new()
+                    .serve_connection(TokioIo::new(stream), service_fn(responder))
+                    .await
+                    .unwrap();
+            });
+        }
+    });
+
+    std::thread::sleep(Duration::from_millis(1));
+    socket_path
+}
+
+#[allow(unused)]
 pub fn serve_vsock() -> VsockAddr {
     let port = fastrand::u32(15000..=65536);
     let addr = VsockAddr::new(VMADDR_CID_LOCAL, port);

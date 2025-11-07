@@ -1,5 +1,7 @@
 use std::{
+    ffi::OsString,
     io::Result as IoResult,
+    os::unix::ffi::OsStringExt as _,
     path::{Path, PathBuf},
 };
 
@@ -19,7 +21,7 @@ pub trait UnixUri {
 
 impl UnixUri for Uri {
     fn unix(socket_path: impl AsRef<Path>, url: impl AsRef<str>) -> Result<Uri, InvalidUri> {
-        let authority = encode(socket_path.as_ref().to_string_lossy().to_string());
+        let authority = encode(socket_path.as_ref().as_os_str().as_encoded_bytes());
         let path_and_query = url.as_ref().trim_start_matches('/');
         let uri_str = format!("unix://{authority}/{path_and_query}");
         uri_str.parse()
@@ -29,8 +31,8 @@ impl UnixUri for Uri {
         if self.scheme_str() == Some("unix") {
             match self.host() {
                 Some(host) => {
-                    let bytes = Vec::from_hex(host).map_err(|_| io_input_err("URI host must be hex"))?;
-                    Ok(PathBuf::from(String::from_utf8_lossy(&bytes).into_owned()))
+                    let octets = Vec::from_hex(host).map_err(|_| io_input_err("URI host must be hexadecimal"))?;
+                    Ok(OsString::from_vec(octets).into())
                 }
                 None => Err(io_input_err("URI host must be present")),
             }

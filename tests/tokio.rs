@@ -1,5 +1,5 @@
 use bytes::Bytes;
-use common::{check_response, serve_firecracker, serve_unix, serve_vsock};
+use common::{check_response, serve_firecracker, serve_unix, serve_unix_abstract, serve_vsock};
 use http::{Request, Uri};
 use http_body_util::Full;
 use hyper::client::conn::http1::handshake;
@@ -14,8 +14,21 @@ use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 mod common;
 
 #[tokio::test]
-async fn tokio_unix_raw_connectivity() {
+async fn tokio_unix_raw_connectivity_with_pathname() {
     let socket_path = serve_unix();
+    let io = TokioBackend::connect_to_unix_socket(&socket_path).await.unwrap();
+    let (mut send_request, conn) = handshake::<_, Full<Bytes>>(io).await.unwrap();
+    tokio::spawn(conn);
+    let response = send_request
+        .send_request(Request::new(Full::new(Bytes::new())))
+        .await
+        .unwrap();
+    check_response(response).await;
+}
+
+#[tokio::test]
+async fn tokio_unix_raw_connectivity_with_abstract_name() {
+    let socket_path = serve_unix_abstract();
     let io = TokioBackend::connect_to_unix_socket(&socket_path).await.unwrap();
     let (mut send_request, conn) = handshake::<_, Full<Bytes>>(io).await.unwrap();
     tokio::spawn(conn);

@@ -50,7 +50,7 @@ impl AsyncVsockIo {
                 // TODO: Once https://github.com/rust-lang/rust/issues/63569 is stable, use `assume_init_mut`:
                 let buffer = unsafe { &mut *(cursor.as_mut() as *mut [MaybeUninit<u8>] as *mut [u8]) };
                 let amount = self.0.get_ref().read(buffer);
-                try_advance_cursor(cursor, self.0.get_ref().read(buffer))
+                try_advance_cursor(cursor, amount)
             }
             other => Some(other),
         }
