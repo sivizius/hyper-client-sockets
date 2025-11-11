@@ -17,7 +17,8 @@ use crate::utils::{
 
 pub type TokioFirecrackerIoInner = TokioIo<UnixStream>;
 
-pub struct TokioFirecrackerIo(TokioIo<UnixStream>);
+#[derive(Debug)]
+pub struct TokioFirecrackerIo(pub TokioIo<UnixStream>);
 
 impl TokioFirecrackerIo {
     pub(super) async fn connect<P>(host_socket_path: P, guest_port: u32) -> Result<Self>
@@ -43,6 +44,18 @@ impl Deref for TokioFirecrackerIo {
 impl DerefMut for TokioFirecrackerIo {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+impl From<TokioFirecrackerIoInner> for TokioFirecrackerIo {
+    fn from(inner: TokioFirecrackerIoInner) -> Self {
+        Self(inner)
+    }
+}
+
+impl From<TokioFirecrackerIo> for TokioFirecrackerIoInner {
+    fn from(TokioFirecrackerIo(inner): TokioFirecrackerIo) -> Self {
+        inner
     }
 }
 

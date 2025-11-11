@@ -16,7 +16,8 @@ use crate::utils::vsock::{check_connection, raw_connect, try_advance_cursor, try
 
 pub type AsyncVsockIoInner = Async<File>;
 
-pub struct AsyncVsockIo(AsyncVsockIoInner);
+#[derive(Debug)]
+pub struct AsyncVsockIo(pub AsyncVsockIoInner);
 
 impl AsyncVsockIo {
     pub(super) async fn connect(addr: VsockAddr) -> Result<Self> {
@@ -75,6 +76,18 @@ impl Deref for AsyncVsockIo {
 impl DerefMut for AsyncVsockIo {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+impl From<AsyncVsockIoInner> for AsyncVsockIo {
+    fn from(inner: AsyncVsockIoInner) -> Self {
+        Self(inner)
+    }
+}
+
+impl From<AsyncVsockIo> for AsyncVsockIoInner {
+    fn from(AsyncVsockIo(inner): AsyncVsockIo) -> Self {
+        inner
     }
 }
 

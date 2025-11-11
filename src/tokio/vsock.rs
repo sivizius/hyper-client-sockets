@@ -17,7 +17,8 @@ pub type TokioVsockIoInner = AsyncFd<VsockStream>;
 
 /// IO object representing an active VSOCK connection controlled via a Tokio [`AsyncFd`].
 /// This is internally a reimplementation of a relevant part of the tokio-vsock crate.
-pub struct TokioVsockIo(TokioVsockIoInner);
+#[derive(Debug)]
+pub struct TokioVsockIo(pub TokioVsockIoInner);
 
 impl TokioVsockIo {
     pub(super) async fn connect(addr: VsockAddr) -> Result<Self> {
@@ -77,6 +78,18 @@ impl Deref for TokioVsockIo {
 impl DerefMut for TokioVsockIo {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+impl From<TokioVsockIoInner> for TokioVsockIo {
+    fn from(inner: TokioVsockIoInner) -> Self {
+        Self(inner)
+    }
+}
+
+impl From<TokioVsockIo> for TokioVsockIoInner {
+    fn from(TokioVsockIo(inner): TokioVsockIo) -> Self {
+        inner
     }
 }
 

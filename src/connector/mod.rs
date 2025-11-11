@@ -33,7 +33,27 @@ pub use self::vsock::VsockConnector;
 
 /// This is an internal wrapper over an IO type that implements [`Write`] and
 /// [`Read`] that also implements [`Connection`] to achieve compatibility with hyper-util.
-pub struct ConnectableIo<IO>(IO);
+#[derive(Debug)]
+pub struct ConnectableIo<IO>(pub IO);
+
+impl<IO> From<IO> for ConnectableIo<IO> {
+    fn from(inner: IO) -> Self {
+        Self(inner)
+    }
+}
+
+impl<IO: Write + Read + Send + Unpin> Connection for ConnectableIo<IO> {
+    fn connected(&self) -> Connected {
+        Connected::new()
+    }
+}
+
+impl<IO: Write + Read + Send + Unpin> Read for ConnectableIo<IO> {
+    #[inline(always)]
+    fn poll_read(self: Pin<&mut Self>, ctx: &mut Context<'_>, buf: ReadBufCursor<'_>) -> Poll<Result<()>> {
+        Pin::new(&mut self.get_mut().0).poll_read(ctx, buf)
+    }
+}
 
 impl<IO: Write + Read + Send + Unpin> Write for ConnectableIo<IO> {
     #[inline(always)]
@@ -59,18 +79,5 @@ impl<IO: Write + Read + Send + Unpin> Write for ConnectableIo<IO> {
     #[inline(always)]
     fn poll_write_vectored(self: Pin<&mut Self>, ctx: &mut Context<'_>, bufs: &[IoSlice<'_>]) -> Poll<Result<usize>> {
         Pin::new(&mut self.get_mut().0).poll_write_vectored(ctx, bufs)
-    }
-}
-
-impl<IO: Write + Read + Send + Unpin> Read for ConnectableIo<IO> {
-    #[inline(always)]
-    fn poll_read(self: Pin<&mut Self>, ctx: &mut Context<'_>, buf: ReadBufCursor<'_>) -> Poll<Result<()>> {
-        Pin::new(&mut self.get_mut().0).poll_read(ctx, buf)
-    }
-}
-
-impl<IO: Write + Read + Send + Unpin> Connection for ConnectableIo<IO> {
-    fn connected(&self) -> Connected {
-        Connected::new()
     }
 }

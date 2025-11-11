@@ -16,7 +16,8 @@ use crate::utils::{
 
 pub type AsyncFirecrackerIoInner = FuturesIo<Async<UnixStream>>;
 
-pub struct AsyncFirecrackerIo(AsyncFirecrackerIoInner);
+#[derive(Debug)]
+pub struct AsyncFirecrackerIo(pub AsyncFirecrackerIoInner);
 
 impl AsyncFirecrackerIo {
     pub(super) async fn connect<P>(host_socket_path: P, guest_port: u32) -> Result<Self>
@@ -43,6 +44,18 @@ impl Deref for AsyncFirecrackerIo {
 impl DerefMut for AsyncFirecrackerIo {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+impl From<AsyncFirecrackerIoInner> for AsyncFirecrackerIo {
+    fn from(inner: AsyncFirecrackerIoInner) -> Self {
+        Self(inner)
+    }
+}
+
+impl From<AsyncFirecrackerIo> for AsyncFirecrackerIoInner {
+    fn from(AsyncFirecrackerIo(inner): AsyncFirecrackerIo) -> Self {
+        inner
     }
 }
 
