@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use std::io::Result as IoResult;
 
 use hex::{encode, FromHex};
@@ -9,14 +12,17 @@ use super::io_input_err;
 /// An extension trait for hyper URI that allows constructing a hex-encoded VSOCK socket URI.
 pub trait VsockUri {
     /// Create a new VSOCK URI with the given address and in-socket URL.
-    fn vsock(addr: VsockAddr, url: impl AsRef<str>) -> Result<Uri, InvalidUri>;
+    fn vsock<S: AsRef<str>>(addr: VsockAddr, url: S) -> Result<Uri, InvalidUri>;
 
     /// Deconstruct this VSOCK URI into its address.
     fn parse_vsock(&self) -> IoResult<VsockAddr>;
 }
 
 impl VsockUri for Uri {
-    fn vsock(addr: VsockAddr, url: impl AsRef<str>) -> Result<Uri, InvalidUri> {
+    fn vsock<S>(addr: VsockAddr, url: S) -> Result<Uri, InvalidUri>
+    where
+        S: AsRef<str>,
+    {
         let authority = encode(format!("{}.{}", addr.cid(), addr.port()));
         let path_and_query = url.as_ref().trim_start_matches('/');
         let uri_str = format!("vsock://{authority}/{path_and_query}");

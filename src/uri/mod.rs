@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 #[cfg(feature = "firecracker")]
 #[cfg_attr(docsrs, doc(cfg(feature = "firecracker")))]
 pub mod firecracker;
