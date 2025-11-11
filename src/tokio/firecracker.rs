@@ -12,7 +12,7 @@ use tokio::{
 
 use crate::utils::{
     firecracker::{format_request, parse_connection_response},
-    hyper_io_by_deref,
+    hyper_io_by_deref, hyper_util_connection_by_deref,
 };
 
 pub type TokioFirecrackerIoInner = TokioIo<UnixStream>;
@@ -60,3 +60,4 @@ impl From<TokioFirecrackerIo> for TokioFirecrackerIoInner {
 }
 
 hyper_io_by_deref!(TokioFirecrackerIo);
+hyper_util_connection_by_deref!(TokioFirecrackerIo);

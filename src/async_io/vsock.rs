@@ -12,7 +12,10 @@ use async_io::Async;
 use hyper::rt::{Read, ReadBufCursor, Write};
 use vsock::VsockAddr;
 
-use crate::utils::vsock::{check_connection, raw_connect, try_advance_cursor, try_poll_write};
+use crate::utils::{
+    hyper_util_connection_default,
+    vsock::{check_connection, raw_connect, try_advance_cursor, try_poll_write},
+};
 
 pub type AsyncVsockIoInner = Async<File>;
 
@@ -126,3 +129,5 @@ impl Write for AsyncVsockIo {
         Poll::Ready(Ok(()))
     }
 }
+
+hyper_util_connection_default!(AsyncVsockIo);

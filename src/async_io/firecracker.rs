@@ -11,7 +11,7 @@ use smol_hyper::rt::FuturesIo;
 
 use crate::utils::{
     firecracker::{format_request, parse_connection_response},
-    hyper_io_by_deref,
+    hyper_io_by_deref, hyper_util_connection_default,
 };
 
 pub type AsyncFirecrackerIoInner = FuturesIo<Async<UnixStream>>;
@@ -60,3 +60,4 @@ impl From<AsyncFirecrackerIo> for AsyncFirecrackerIoInner {
 }
 
 hyper_io_by_deref!(AsyncFirecrackerIo);
+hyper_util_connection_default!(AsyncFirecrackerIo);

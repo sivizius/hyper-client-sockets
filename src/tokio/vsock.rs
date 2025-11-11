@@ -11,7 +11,10 @@ use hyper::rt::{Read, ReadBufCursor, Write};
 use tokio::io::unix::AsyncFd;
 use vsock::{VsockAddr, VsockStream};
 
-use crate::utils::vsock::{check_connection, raw_connect, try_advance_cursor, try_poll_write};
+use crate::utils::{
+    hyper_util_connection_default,
+    vsock::{check_connection, raw_connect, try_advance_cursor, try_poll_write},
+};
 
 pub type TokioVsockIoInner = AsyncFd<VsockStream>;
 
@@ -128,3 +131,5 @@ impl Write for TokioVsockIo {
         Poll::Ready(Ok(()))
     }
 }
+
+hyper_util_connection_default!(TokioVsockIo);

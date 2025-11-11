@@ -7,7 +7,7 @@ use std::{
 use hyper_util::rt::TokioIo;
 use tokio::net::UnixStream;
 
-use crate::utils::hyper_io_by_deref;
+use crate::utils::{hyper_io_by_deref, hyper_util_connection_by_deref};
 
 pub type TokioUnixIoInner = TokioIo<UnixStream>;
 
@@ -50,3 +50,4 @@ impl From<TokioUnixIo> for TokioUnixIoInner {
 }
 
 hyper_io_by_deref!(TokioUnixIo);
+hyper_util_connection_by_deref!(TokioUnixIo);

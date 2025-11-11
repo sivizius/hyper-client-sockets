@@ -8,7 +8,7 @@ use std::{
 use async_io::Async;
 use smol_hyper::rt::FuturesIo;
 
-use crate::utils::hyper_io_by_deref;
+use crate::utils::{hyper_io_by_deref, hyper_util_connection_default};
 
 pub type AsyncUnixIoInner = FuturesIo<Async<UnixStream>>;
 
@@ -54,3 +54,4 @@ impl From<AsyncUnixIo> for AsyncUnixIoInner {
 }
 
 hyper_io_by_deref!(AsyncUnixIo);
+hyper_util_connection_default!(AsyncUnixIo);

@@ -64,4 +64,36 @@ macro_rules! hyper_io_by_deref {
 }
 
 #[allow(unused)]
-pub(crate) use hyper_io_by_deref;
+macro_rules! hyper_util_connection_by_deref {
+    ($ty:ty) => {
+        const _: () = {
+            use std::ops::Deref as _;
+
+            use hyper_util::client::legacy::connect::{Connected, Connection};
+
+            impl Connection for $ty {
+                fn connected(&self) -> Connected {
+                    self.deref().connected()
+                }
+            }
+        };
+    };
+}
+
+#[allow(unused)]
+macro_rules! hyper_util_connection_default {
+    ($ty:ty) => {
+        const _: () = {
+            use hyper_util::client::legacy::connect::{Connected, Connection};
+
+            impl Connection for $ty {
+                fn connected(&self) -> Connected {
+                    Connected::new()
+                }
+            }
+        };
+    };
+}
+
+#[allow(unused)]
+pub(crate) use {hyper_io_by_deref, hyper_util_connection_by_deref, hyper_util_connection_default};
