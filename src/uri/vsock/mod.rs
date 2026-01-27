@@ -5,7 +5,7 @@ use std::io::Result as IoResult;
 
 use hex::{encode, FromHex};
 use http::uri::{InvalidUri, Uri};
-use vsock::VsockAddr;
+use nix::sys::socket::VsockAddr;
 
 use super::io_input_err;
 

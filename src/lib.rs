@@ -6,7 +6,7 @@ pub mod utils;
 use std::path::Path;
 
 #[cfg(feature = "vsock")]
-use vsock::VsockAddr;
+use nix::sys::socket::VsockAddr;
 
 #[cfg(any(feature = "firecracker", feature = "unix", feature = "vsock"))]
 use std::{future::Future, io::Result};

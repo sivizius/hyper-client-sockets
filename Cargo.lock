@@ -402,12 +402,12 @@ dependencies = [
  "hyper-client-sockets",
  "hyper-util",
  "libc",
+ "nix",
  "smol-hyper",
  "tokio",
  "tokio-vsock",
  "tower-service",
  "uuid",
- "vsock",
 ]
 
 [[package]]

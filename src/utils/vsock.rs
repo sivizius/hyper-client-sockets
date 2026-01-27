@@ -5,7 +5,7 @@ use std::{
 };
 
 use hyper::rt::ReadBufCursor;
-use vsock::VsockAddr;
+use nix::sys::socket::VsockAddr;
 
 pub fn check_connection(raw_fd: RawFd) -> Result<()> {
     let mut sock_err: libc::c_int = 0;

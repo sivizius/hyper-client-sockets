@@ -1,18 +1,17 @@
 use std::{convert::Infallible, future::Future, path::PathBuf, time::Duration};
 
 use bytes::{Bytes, BytesMut};
-use http::{Request, Response};
 use http_body_util::{BodyExt, Full};
-use hyper::{body::Incoming, server::conn::http1, service::service_fn};
+use hyper::{body::Incoming, server::conn::http1, service::service_fn, Request, Response};
 use hyper_util::rt::TokioIo;
 use libc::VMADDR_CID_LOCAL;
+use nix::sys::socket::VsockAddr;
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::UnixListener,
 };
 use tokio_vsock::VsockListener;
 use uuid::Uuid;
-use vsock::VsockAddr;
 
 #[allow(unused)]
 pub fn serve_unix() -> PathBuf {

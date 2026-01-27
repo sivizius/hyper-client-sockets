@@ -1,22 +1,23 @@
 use std::{
+    fs::File,
     io::{Read as _, Result, Write as _},
     mem::MaybeUninit,
     ops::{Deref, DerefMut},
-    os::fd::{AsRawFd as _, FromRawFd as _, IntoRawFd as _, OwnedFd},
+    os::fd::{AsRawFd as _, FromRawFd as _},
     pin::Pin,
     task::{Context, Poll},
 };
 
 use hyper::rt::{Read, ReadBufCursor, Write};
+use nix::sys::socket::VsockAddr;
 use tokio::io::unix::AsyncFd;
-use vsock::{VsockAddr, VsockStream};
 
 use crate::utils::{
     hyper_util_connection_default,
     vsock::{check_connection, raw_connect, try_advance_cursor, try_poll_write},
 };
 
-pub type TokioVsockIoInner = AsyncFd<VsockStream>;
+pub type TokioVsockIoInner = AsyncFd<File>;
 
 /// IO object representing an active VSOCK connection controlled via a Tokio [`AsyncFd`].
 /// This is internally a reimplementation of a relevant part of the tokio-vsock crate.
@@ -26,7 +27,7 @@ pub struct TokioVsockIo(pub TokioVsockIoInner);
 impl TokioVsockIo {
     pub(super) async fn connect(addr: VsockAddr) -> Result<Self> {
         let socket = raw_connect(addr)?;
-        let async_fd = AsyncFd::new(unsafe { OwnedFd::from_raw_fd(socket) })?;
+        let async_fd = AsyncFd::new(unsafe { File::from_raw_fd(socket) })?;
 
         loop {
             let connection_check = {
@@ -35,11 +36,7 @@ impl TokioVsockIo {
             };
 
             break match connection_check {
-                Ok(Ok(_)) => {
-                    let raw_fd = async_fd.into_inner().into_raw_fd();
-                    let inner = unsafe { VsockStream::from_raw_fd(raw_fd) };
-                    AsyncFd::new(inner).map(Self)
-                }
+                Ok(Ok(())) => Ok(Self(async_fd)),
                 Ok(Err(err)) => Err(err),
                 Err(_would_block) => continue,
             };

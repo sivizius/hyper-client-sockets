@@ -17,7 +17,7 @@ use std::io::Result;
 use std::path::Path;
 
 #[cfg(feature = "vsock")]
-use ::vsock::VsockAddr;
+use nix::sys::socket::VsockAddr;
 
 #[cfg(feature = "firecracker")]
 #[cfg_attr(docsrs, doc(cfg(feature = "firecracker")))]

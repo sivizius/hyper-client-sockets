@@ -1,5 +1,5 @@
 use hyper::Uri;
-use vsock::VsockAddr;
+use nix::sys::socket::VsockAddr;
 
 use super::VsockUri as _;
 

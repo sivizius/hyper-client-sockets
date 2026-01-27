@@ -10,7 +10,7 @@ use std::{
 
 use async_io::Async;
 use hyper::rt::{Read, ReadBufCursor, Write};
-use vsock::VsockAddr;
+use nix::sys::socket::VsockAddr;
 
 use crate::utils::{
     hyper_util_connection_default,
